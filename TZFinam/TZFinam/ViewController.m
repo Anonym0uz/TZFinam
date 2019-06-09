@@ -12,6 +12,7 @@
 
 @interface ViewController ()
 @property NSMutableArray *articlesArray;
+@property TZAPIType selectedType;
 @end
 
 @implementation ViewController
@@ -20,13 +21,13 @@
 
 - (void)viewDidLoad {
     [super viewDidLoad];
-    [UIMaker setupNavigationController:self.navigationController andTitle:@"Feed" andItem:self.navigationItem withLeftBtn:nil andRightBtn:nil];
+    [UIMaker setupNavigationController:self.navigationController andTitle:@"Feed" andItem:self.navigationItem withLeftBtn:nil andRightBtn:[UIMaker setupBarButton:@"More" image:@"" target:self action:@selector(moreButtonClicked)]];
     [self createViewElements];
 }
 
 - (void)viewWillAppear:(BOOL)animated {
     [super viewWillAppear:animated];
-    [self getDatasFromModel];
+    [self getDatasFromModel:self.selectedType];
 }
 
 - (void)viewDidDisappear:(BOOL)animated {
@@ -54,11 +55,12 @@
     [self.tableView addSubview:self.refreshControl];
     [self.view addSubview:self.tableView];
     
-    [self getDatasFromModel];
+    [self getDatasFromModel:TZAPITypeBitcoin];
 }
 
-- (void)getDatasFromModel {
-    [VCModel.sharedModel getDataFromAPIByURL:TZAPITypeBitcoin completeHandler:^(BOOL success, NSString *error, id response) {
+- (void)getDatasFromModel:(TZAPIType)type {
+    self.selectedType = type;
+    [VCModel.sharedModel getDataFromAPIByURL:type completeHandler:^(BOOL success, NSString *error, id response) {
         if (success) {
             self.articlesArray = [NSMutableArray arrayWithArray:response];
             dispatch_async(dispatch_get_main_queue(), ^{
@@ -74,7 +76,28 @@
 }
 
 - (void)reloadDatas {
-    [self getDatasFromModel];
+    [self getDatasFromModel:self.selectedType];
+}
+
+- (void)moreButtonClicked {
+    UIAlertController *alert = [UIAlertController alertControllerWithTitle:@"TZFinam" message:@"Choose option" preferredStyle:UIAlertControllerStyleActionSheet];
+    [alert addAction:[UIAlertAction actionWithTitle:@"Bitcoin" style:UIAlertActionStyleDefault handler:^(UIAlertAction * _Nonnull action) {
+        [self getDatasFromModel:TZAPITypeBitcoin];
+    }]];
+    [alert addAction:[UIAlertAction actionWithTitle:@"Business headlines" style:UIAlertActionStyleDefault handler:^(UIAlertAction * _Nonnull action) {
+        [self getDatasFromModel:TZAPITypeBusiness];
+    }]];
+    [alert addAction:[UIAlertAction actionWithTitle:@"Menth Apple" style:UIAlertActionStyleDefault handler:^(UIAlertAction * _Nonnull action) {
+        [self getDatasFromModel:TZAPITypeMenthApple];
+    }]];
+    [alert addAction:[UIAlertAction actionWithTitle:@"From TechCrunch" style:UIAlertActionStyleDefault handler:^(UIAlertAction * _Nonnull action) {
+        [self getDatasFromModel:TZAPITypeFromTechCrunchCorp];
+    }]];
+    [alert addAction:[UIAlertAction actionWithTitle:@"By Wall Street Journal" style:UIAlertActionStyleDefault handler:^(UIAlertAction * _Nonnull action) {
+        [self getDatasFromModel:TZAPITypeByWallStreet];
+    }]];
+    [alert addAction:[UIAlertAction actionWithTitle:@"Cancel" style:UIAlertActionStyleCancel handler:nil]];
+    [self presentViewController:alert animated:true completion:nil];
 }
 
 #pragma mark - TBDelegate & DataSource
@@ -83,7 +106,11 @@
     TZFCell *cell = [tableView dequeueReusableCellWithIdentifier:@"FinamCell" forIndexPath:indexPath];
     Articles *articl = self.articlesArray[indexPath.row];
     cell.cellTitle.text = articl.title;
-    cell.cellContent.text = articl.content;
+    if ([articl.content isKindOfClass:[NSString class]]) {
+        cell.cellContent.text = articl.content;
+    } else {
+        cell.cellContent.text = @"";
+    }
     cell.sourceName.text = articl.source.name;
     return cell;
 }

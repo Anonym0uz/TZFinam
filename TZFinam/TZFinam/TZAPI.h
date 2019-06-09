@@ -10,6 +10,10 @@
 
 typedef NS_ENUM(NSInteger, TZAPIType){
     TZAPITypeBitcoin = 0,
+    TZAPITypeBusiness = 1,
+    TZAPITypeMenthApple = 2,
+    TZAPITypeFromTechCrunchCorp = 3,
+    TZAPITypeByWallStreet = 4,
 };
 
 NS_ASSUME_NONNULL_BEGIN

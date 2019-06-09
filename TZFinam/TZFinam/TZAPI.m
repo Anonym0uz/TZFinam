@@ -26,9 +26,20 @@
     
     switch (type) {
         case TZAPITypeBitcoin:
-            url = [NSURL URLWithString:@"https://newsapi.org/v2/everything?q=bitcoin&from=2019-05-06&sortBy=publishedAt&apiKey=3d41bfba49f947c386feef461c8b1b55"];
+            url = [self setBitRequest];
             break;
-            
+        case TZAPITypeBusiness:
+            url = [NSURL URLWithString:@"https://newsapi.org/v2/top-headlines?country=us&category=business&apiKey=3d41bfba49f947c386feef461c8b1b55"];
+            break;
+        case TZAPITypeMenthApple:
+            url = [self setMenthAppleRequest];
+            break;
+        case TZAPITypeFromTechCrunchCorp:
+            url = [NSURL URLWithString:@"https://newsapi.org/v2/top-headlines?sources=techcrunch&apiKey=3d41bfba49f947c386feef461c8b1b55"];
+            break;
+        case TZAPITypeByWallStreet:
+            url = [NSURL URLWithString:@"https://newsapi.org/v2/everything?domains=wsj.com&apiKey=3d41bfba49f947c386feef461c8b1b55"];
+            break;
         default:
             break;
     }
@@ -41,7 +52,6 @@
     [[[NSURLSession sharedSession] dataTaskWithRequest:request completionHandler:^(NSData * _Nullable data, NSURLResponse * _Nullable response, NSError * _Nullable error) {
           NSError *err;
           NSDictionary *artJSON = [NSJSONSerialization JSONObjectWithData:data options:NSJSONReadingAllowFragments error:&err];
-          NSLog(@"JSON: %@", artJSON);
           if (err){
               NSLog(@"Failed parse JSON: %@", err);
               complete(false, [NSString stringWithFormat:@"%@", err], nil);
@@ -50,7 +60,6 @@
           
           NSMutableArray<Articles *> *articles = NSMutableArray.new;
           for (NSDictionary *artDict in [artJSON objectForKey:@"articles"]) {
-              NSLog(@"%@", artDict);
               Articles *article = Articles.new;
               Source *source = Source.new;
               NSDictionary *sourceDict = artDict[@"source"];
@@ -67,8 +76,21 @@
               [articles addObject:article];
           }
           complete(true, @"", articles);
-          NSLog(@"%@", articles[1]);
       }] resume];
+}
+
+- (NSURL *)setBitRequest {
+    NSDateFormatter *dateFormatter=[[NSDateFormatter alloc] init];
+    [dateFormatter setDateFormat:@"yyyy-MM-dd"];
+    NSString *urlStr = [NSString stringWithFormat:@"https://newsapi.org/v2/everything?q=bitcoin&from=%@&sortBy=publishedAt&apiKey=3d41bfba49f947c386feef461c8b1b55", [dateFormatter stringFromDate:[NSDate date]]];
+    return [NSURL URLWithString:urlStr];
+}
+
+- (NSURL *)setMenthAppleRequest {
+    NSDateFormatter *dateFormatter=[[NSDateFormatter alloc] init];
+    [dateFormatter setDateFormat:@"yyyy-MM-dd"];
+    NSString *urlStr = [NSString stringWithFormat:@"https://newsapi.org/v2/everything?q=apple&from=%@&to=%@&sortBy=popularity&apiKey=3d41bfba49f947c386feef461c8b1b55", [dateFormatter stringFromDate:[NSDate date]], [dateFormatter stringFromDate:[NSDate date]]];
+    return [NSURL URLWithString:urlStr];
 }
 
 @end
